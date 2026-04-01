@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World - Animated Gradient</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom gradient animation */
+        .gradient-bg {
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fad0c4, #ff9a9e, #fad0c4);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Floating animation */
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        /* Pulse animation */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        /* Text shimmer effect */
+        .text-shimmer {
+            background: linear-gradient(
+                90deg,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0.5) 50%,
+                rgba(255,255,255,0) 100%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        /* Custom cursor */
+        .custom-cursor {
+            cursor: none;
+            position: relative;
+        }
+
+        .custom-cursor::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.8);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center gradient-bg custom-cursor overflow-hidden">
+    <div class="text-center space-y-8">
+        <!-- Floating elements -->
+        <div class="absolute top-1/4 left-1/6 animate-float text-xl opacity-70">
+            ✨
+        </div>
+        <div class="absolute bottom-1/4 right-1/6 animate-float-reverse text-2xl opacity-60">
+            🌟
+        </div>
+
+        <!-- Main content -->
+        <div class="relative z-10">
+            <h1 class="text-5xl font-bold text-white text-shimmer mb-6 animate-pulse-slow">
+                Hello World
+            </h1>
+            <p class="text-xl text-white/90 max-w-xl leading-relaxed">
+                Welcome to this beautifully animated gradient experience!
+            </p>
+
+            <!-- Interactive button -->
+            <button
+                class="mt-8 px-8 py-4 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full
+                       text-white font-medium hover:bg-white/30 transition-all duration-300
+                       transform hover:scale-105 hover:shadow-lg active:scale-95"
+            >
+                Click Me!
+            </button>
+
+            <!-- Particles effect -->
+            <div class="mt-12 flex justify-center space-x-4">
+                <div class="w-4 h-4 bg-white/40 rounded-full animate-pulse delay-150"></div>
+                <div class="w-4 h-4 bg-white/40 rounded-full animate-pulse delay-300"></div>
+                <div class="w-4 h-4 bg-white/40 rounded-full animate-pulse delay-450"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Custom cursor functionality
+        document.addEventListener('mousemove', (e) => {
+            const cursor = document.createElement('div');
+            cursor.className = 'absolute w-2 h-2 bg-white/50 rounded-full pointer-events-none';
+            cursor.style.left = `${e.pageX}px`;
+            cursor.style.top = `${e.pageY}px`;
+            document.body.appendChild(cursor);
+
+            // Remove cursor after short delay
+            setTimeout(() => {
+                cursor.remove();
+            }, 300);
+        });
+
+        // Add reverse float animation for second element
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes float-reverse {
+                0% {
+                    transform: translateY(0px);
+                }
+                50% {
+                    transform: translateY(20px);
+                }
+                100% {
+                    transform: translateY(0px);
+                }
+            }
+
+            .animate-float-reverse {
+                animation: float-reverse 6s ease-in-out infinite;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Add pulse-slow animation
+        const style2 = document.createElement('style');
+        style2.textContent = `
+            @keyframes pulse-slow {
+                0%, 100% {
+                    opacity: 0.8;
+                }
+                50% {
+                    opacity: 1;
+                }
+            }
+
+            .animate-pulse-slow {
+                animation: pulse-slow 4s ease-in-out infinite;
+            }
+        `;
+        document.head.appendChild(style2);
+    </script>
+</body>
+</html>

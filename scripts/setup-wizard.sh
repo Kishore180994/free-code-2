@@ -119,10 +119,11 @@ show_menu() {
   printf "  ${CYAN}3${RESET})  OpenRouter Paid ${DIM}(near-free, no rate limits — recommended)${RESET}\n"
   printf "  ${CYAN}4${RESET})  Codex ${DIM}(GPT-5.4 via ChatGPT auth)${RESET}\n"
   printf "  ${CYAN}5${RESET})  Ollama ${DIM}(local models, fully offline)${RESET}\n"
+  printf "  ${CYAN}6${RESET})  OpenAI-compatible ${DIM}(any OpenAI API — DeepSeek, Groq, Together, etc.)${RESET}\n"
   echo ""
   while true; do
-    read -rp "  Select [1-5]: " choice
-    case "$choice" in 1|2|3|4|5) break ;; *) printf "  ${RED}Enter 1-5.${RESET}\n" ;; esac
+    read -rp "  Select [1-6]: " choice
+    case "$choice" in 1|2|3|4|5|6) break ;; *) printf "  ${RED}Enter 1-6.${RESET}\n" ;; esac
   done
 }
 
@@ -325,7 +326,15 @@ write_settings() {
   local tmp; tmp=$(mktemp)
 
   if [[ "$choice" == "4" ]]; then
-    jq 'del(.model) | .env = (.env // {} | del(.ANTHROPIC_MODEL, .ANTHROPIC_DEFAULT_OPUS_MODEL, .ANTHROPIC_DEFAULT_SONNET_MODEL, .ANTHROPIC_DEFAULT_HAIKU_MODEL, .ANTHROPIC_SMALL_FAST_MODEL, .CLAUDE_CODE_SUBAGENT_MODEL))' "$SETTINGS_JSON" > "$tmp"
+    # Codex: set CLAUDE_CODE_USE_OPENAI, remove Anthropic model overrides
+    jq --arg model "$MAIN_MODEL" '"'"'
+      del(.model) |
+      .env = (.env // {} |
+        del(.ANTHROPIC_MODEL, .ANTHROPIC_DEFAULT_OPUS_MODEL, .ANTHROPIC_DEFAULT_SONNET_MODEL, .ANTHROPIC_DEFAULT_HAIKU_MODEL, .ANTHROPIC_SMALL_FAST_MODEL, .CLAUDE_CODE_SUBAGENT_MODEL) |
+        .CLAUDE_CODE_USE_OPENAI = "1" |
+        .OPENAI_MODEL = $model
+      )
+    '"'"' "$SETTINGS_JSON" > "$tmp"
   else
     jq --arg main "$MAIN_MODEL" --arg fast "$FAST_MODEL" '
       .model = $main |
@@ -354,6 +363,10 @@ print_summary() {
   printf "  ${BOLD}Next steps:${RESET}\n"
   printf "  ${CYAN}▶${RESET} Run ${BOLD}source ~/.zshrc${RESET} or open a new terminal\n"
   printf "  ${CYAN}▶${RESET} Run ${BOLD}free-code${RESET} to start\n"
+  if [[ "$choice" == "4" ]]; then
+    echo ""
+    printf "  ${DIM}Codex auth is read directly from ~/.codex/auth.json — no proxy needed.${RESET}\n"
+  fi
   if [[ "$choice" == "5" ]]; then
     echo ""
     printf "  ${YELLOW}Start Ollama + LiteLLM first:${RESET}\n"
@@ -404,17 +417,24 @@ case "$choice" in
     pick_model "Fast model" "z-ai/glm-4.7-flash"; FAST_MODEL="$PICKED_MODEL"; ok "Fast: $FAST_MODEL"
     build_openrouter_config ;;
 
-  4) # Codex
+  4) # Codex (native OpenAI shim — no proxy needed)
     if [[ $DETECTED_CODEX -eq 0 ]]; then
-      warn "Codex auth not found. Install: ${BOLD}npm install -g @openai/codex${RESET}"
+      warn "Codex auth not found at ~/.codex/auth.json"
+      info "Install Codex CLI: ${BOLD}npm install -g @openai/codex${RESET}"
+      info "Then run ${BOLD}codex${RESET} once to authenticate."
       read -rp "  Continue anyway? [y/N] " yn
       [[ ! "${yn:-N}" =~ ^[Yy]$ ]] && exit 0
     else
-      ok "Codex auth found"
+      ok "Codex auth found at ${CODEX_INFO}"
     fi
-    printf "\n  ${BOLD}Codex model:${RESET}\n"
-    printf "  ${CYAN}1${RESET})  codexplan ${DIM}(GPT-5.4 high reasoning)${RESET}\n"
-    printf "  ${CYAN}2${RESET})  codexspark ${DIM}(GPT-5.3 faster)${RESET}\n"
+
+    printf "
+  ${BOLD}Codex model:${RESET}
+"
+    printf "  ${CYAN}1${RESET})  codexplan ${DIM}(GPT-5.4 high reasoning)${RESET}
+"
+    printf "  ${CYAN}2${RESET})  codexspark ${DIM}(GPT-5.3 faster)${RESET}
+"
     read -rp "  Select [1]: " cp
     case "${cp:-1}" in 2) MAIN_MODEL="codexspark"; FAST_MODEL="codexspark" ;; *) MAIN_MODEL="codexplan"; FAST_MODEL="codexspark" ;; esac
     build_codex_config ;;
@@ -433,6 +453,24 @@ case "$choice" in
     pick_ollama_model "Main model"; MAIN_MODEL="$PICKED_MODEL"; ok "Main: $MAIN_MODEL"
     echo ""; pick_ollama_model "Fast model"; FAST_MODEL="$PICKED_MODEL"; ok "Fast: $FAST_MODEL"
     build_ollama_config ;;
+  6) # OpenAI-compatible (generic)
+    echo ""
+    info "This works with any OpenAI-compatible API: DeepSeek, Groq, Together, Mistral, LM Studio, etc."
+    read -rp "  API base URL [https://api.openai.com/v1]: " base_url
+    base_url="${base_url:-https://api.openai.com/v1}"
+    read -rp "  API key (or press Enter for none): " openai_key
+    openai_key="${openai_key:-not-needed}"
+    read -rp "  Model name (e.g. gpt-4o, deepseek-chat): " MAIN_MODEL
+    MAIN_MODEL="${MAIN_MODEL:-gpt-4o}"
+    read -rp "  Fast model [${MAIN_MODEL}]: " FAST_MODEL
+    FAST_MODEL="${FAST_MODEL:-$MAIN_MODEL}"
+
+    PROVIDER_NAME="OpenAI-compatible (${base_url})"
+    CONFIG_BLOCK="export CLAUDE_CODE_USE_OPENAI=1
+export OPENAI_API_KEY=\"${openai_key}\"
+export OPENAI_BASE_URL=\"${base_url}\"
+export OPENAI_MODEL=\"${MAIN_MODEL}\""
+    ;;
 esac
 
 echo ""

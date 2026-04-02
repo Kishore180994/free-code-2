@@ -132,6 +132,18 @@ export async function getAnthropicClient({
   await checkAndRefreshOAuthTokenIfNeeded()
   logForDebugging('[API:auth] OAuth token check complete')
 
+  // OpenAI/Codex provider: when CLAUDE_CODE_USE_OPENAI=1, bypass Anthropic SDK
+  // and use the OpenAI-compatible shim instead. This supports OpenAI, Codex,
+  // Ollama, LM Studio, DeepSeek, and any OpenAI-compatible API.
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENAI)) {
+    const { createOpenAIShimClient } = await import('./openaiShim.js')
+    return createOpenAIShimClient({
+      defaultHeaders,
+      maxRetries,
+      timeout: parseInt(process.env.API_TIMEOUT_MS || String(600 * 1000), 10),
+    }) as unknown as Anthropic
+  }
+
   if (!isClaudeAISubscriber()) {
     await configureApiKeyHeaders(defaultHeaders, getIsNonInteractiveSession())
   }

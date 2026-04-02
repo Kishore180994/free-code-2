@@ -101,6 +101,27 @@ free-code --version
 | `bun run build:dev` | `./cli-dev` | `VOICE_MODE` only | Dev version stamp |
 | `bun run build:dev:full` | `./cli-dev` | All 45+ experimental flags | **Recommended.** The full unlock build. |
 
+### Setup Wizard (Recommended)
+
+The easiest way to configure free-code with any provider:
+
+```bash
+# Run the interactive setup wizard
+free-code --setup
+
+# Or run directly
+./scripts/setup-wizard.sh
+```
+
+The wizard will:
+- Auto-detect existing providers (Codex, Anthropic, OpenRouter, Ollama)
+- Show you a menu to choose your provider
+- Fetch available models in real-time from OpenRouter
+- Let you pick separate main and fast models
+- Write all config to `~/.zshrc` and `~/.claude/settings.json` automatically
+
+Re-running the wizard replaces the old config cleanly — no manual file editing needed.
+
 ### Run
 
 ```bash

@@ -41,6 +41,16 @@ async function main(): Promise<void> {
     return;
   }
 
+  // Fast-path for --setup: run the interactive setup wizard
+  if (args[0] === '--setup') {
+    const { execSync } = await import('child_process');
+    const path = await import('path');
+    const scriptDir = path.dirname(new URL(import.meta.url).pathname);
+    const setupScript = path.resolve(scriptDir, '../../scripts/setup-wizard.sh');
+    execSync(`bash "${setupScript}"`, { stdio: 'inherit' });
+    return;
+  }
+
   // For all other paths, load the startup profiler
   const {
     profileCheckpoint

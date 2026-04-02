@@ -66,6 +66,10 @@ export function createProjectOnboardingFeed(steps: Step[]): FeedConfig {
       text: warningText
     });
   }
+  // Add setup wizard tip
+  lines.push({
+    text: 'Run /setup to configure your AI provider'
+  });
   return {
     title: 'Tips for getting started',
     lines

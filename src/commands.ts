@@ -23,6 +23,7 @@ import memory from './commands/memory/index.js'
 import help from './commands/help/index.js'
 import ide from './commands/ide/index.js'
 import init from './commands/init.js'
+import setup from './commands/setup.js'
 import initVerifiers from './commands/init-verifiers.js'
 import keybindings from './commands/keybindings/index.js'
 import login from './commands/login/index.js'
@@ -653,6 +654,7 @@ export const BRIDGE_SAFE_COMMANDS: Set<Command> = new Set(
     compact, // Shrink context — useful mid-session from a phone
     clear, // Wipe transcript
     cost, // Show session cost
+    setup, // Setup wizard for AI provider configuration
     summary, // Summarize conversation
     releaseNotes, // Show changelog
     files, // List tracked files
